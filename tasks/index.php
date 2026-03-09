@@ -66,7 +66,7 @@ function view_task() {
 }
 
 function create_task () {
-    if (!(isset($_POST["title"]) && isset($_POST["description"]) && isset($_POST["status"]))) {
+    if (!(validate_field($_POST["title"]) && validate_field($_POST["description"]) && validate_field($_POST["status"]))) {
         http_response_code(400);
         header("Content-Type: application/json");
         $response = [
@@ -74,11 +74,11 @@ function create_task () {
             "detail" => "Invalid request body",
             "missing_fields" => []
         ];
-        if (!isset($_POST["title"]))
+        if (!validate_field($_POST["title"]))
             array_push($response["missing_fields"], "title");
-        if (!isset($_POST["description"]))
+        if (!validate_field($_POST["description"]))
             array_push($response["missing_fields"], "description");
-        if (!isset($_POST["status"]))
+        if (!validate_field($_POST["status"]))
             array_push($response["missing_fields"], "status");
         echo json_encode($response);
         die();
@@ -199,4 +199,8 @@ function delete_task () {
         "detail" => "Success"
     ];
     echo json_encode($response);
+}
+
+function validate_field($field) {
+    return isset($field) && !empty($field) && !ctype_space($field);
 }
