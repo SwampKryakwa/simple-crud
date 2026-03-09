@@ -60,7 +60,14 @@ function view_task() {
     $statement->bindParam(":id", $_GET["id"]);
     $statement->execute();
     $task = $statement->fetch();
-    $response = ["title" => $task["title"], "description" => $task["description"], "status" => $task["status"]];
+    $response = [
+        "status" => 200,
+        "task" => [
+            "title" => $task["title"],
+            "description" => $task["description"],
+            "status" => $task["status"]
+        ]
+    ];
     header("Content-Type: application/json");
     echo json_encode($response);
 }
