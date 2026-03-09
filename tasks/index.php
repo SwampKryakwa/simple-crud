@@ -25,7 +25,7 @@ function view_tasks() {
     $tasks = DB\DBConnection::$pdo->query("SELECT * FROM tasks");
     $response = ["tasks" => []];
     while ($task = $tasks->fetch())
-        array_push($response["tasks"], ["id" => $task["id"], "tasks" => $task["tasks"], "description" => $task["description"], "status" => $task["status"]]);
+        array_push($response["tasks"], ["id" => $task["id"], "title" => $task["title"], "description" => $task["description"], "status" => $task["status"]]);
     header("Content-Type: application/json");
     echo json_encode($response);
 }
@@ -60,13 +60,13 @@ function view_task() {
     $statement->bindParam(":id", $_GET["id"]);
     $statement->execute();
     $task = $statement->fetch();
-    $response = ["tasks" => $task["tasks"], "description" => $task["description"], "status" => $task["status"]];
+    $response = ["title" => $task["title"], "description" => $task["description"], "status" => $task["status"]];
     header("Content-Type: application/json");
     echo json_encode($response);
 }
 
 function create_task () {
-    if (!(isset($_POST["tasks"]) && isset($_POST["description"]) && isset($_POST["status"]))) {
+    if (!(isset($_POST["title"]) && isset($_POST["description"]) && isset($_POST["status"]))) {
         http_response_code(400);
         header("Content-Type: application/json");
         $response = [
@@ -74,8 +74,8 @@ function create_task () {
             "detail" => "Invalid request body",
             "missing_fields" => []
         ];
-        if (!isset($_POST["tasks"]))
-            array_push($response["missing_fields"], "tasks");
+        if (!isset($_POST["title"]))
+            array_push($response["missing_fields"], "title");
         if (!isset($_POST["description"]))
             array_push($response["missing_fields"], "description");
         if (!isset($_POST["status"]))
@@ -86,8 +86,8 @@ function create_task () {
 
     require_once "../DBHandling/connection.php";
     DB\DBConnection::$pdo->beginTransaction();
-    $statement = DB\DBConnection::$pdo->prepare("INSERT INTO tasks (tasks, description, status) VALUES (:tasks, :description, :status);");
-    $statement->bindParam(":tasks", $_POST["tasks"]);
+    $statement = DB\DBConnection::$pdo->prepare("INSERT INTO tasks (title, description, status) VALUES (:title, :description, :status);");
+    $statement->bindParam(":title", $_POST["title"]);
     $statement->bindParam(":description", $_POST["description"]);
     $statement->bindParam(":status", $_POST["status"]);
     $statement->execute();
@@ -138,9 +138,9 @@ function update_task () {
     $raw = file_get_contents('php://input');
     parse_str($raw, $data);
     
-    $statement = DB\DBConnection::$pdo->prepare("UPDATE tasks SET tasks = :tasks, description = :description, status = :status WHERE id = :id");
+    $statement = DB\DBConnection::$pdo->prepare("UPDATE tasks SET title = :title, description = :description, status = :status WHERE id = :id");
     $statement->bindParam(":id", $_GET["id"]);
-    $statement->bindParam(":tasks", $data["tasks"]);
+    $statement->bindParam(":title", $data["title"]);
     $statement->bindParam(":description", $data["description"]);
     $statement->bindParam(":status", $data["status"]);
     $statement->execute();
