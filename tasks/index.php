@@ -92,7 +92,10 @@ function create_task () {
     $statement->bindParam(":status", $_POST["status"]);
     $statement->execute();
     $result = DB\DBConnection::$pdo->query("SELECT LAST_INSERT_ID();");
-    $response = ["id" => $result->fetchColumn()];
+    $response = [
+        "status" => 200,
+        "id" => $result->fetchColumn()
+    ];
     DB\DBConnection::$pdo->commit();
     header("Content-Type: application/json");
     echo json_encode($response);
