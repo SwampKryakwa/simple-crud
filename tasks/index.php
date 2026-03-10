@@ -73,7 +73,7 @@ function view_task() {
 }
 
 function create_task () {
-    if (!(validate_field($_POST["title"]) && validate_field($_POST["description"]) && validate_field($_POST["status"]))) {
+    if (!validate_fields($_POST)) {
         http_response_code(400);
         header("Content-Type: application/json");
         $response = [
@@ -81,11 +81,11 @@ function create_task () {
             "detail" => "Invalid request body",
             "missing_fields" => []
         ];
-        if (!validate_field($_POST["title"]))
+        if (!isset($_POST["title"]) || empty($_POST["title"]) || ctype_space($_POST["title"]))
             array_push($response["missing_fields"], "title");
-        if (!validate_field($_POST["description"]))
+        if (!isset($_POST["description"]) || empty($_POST["description"]) || ctype_space($_POST["description"]))
             array_push($response["missing_fields"], "description");
-        if (!validate_field($_POST["status"]))
+        if (!isset($_POST["status"]) || empty($_POST["status"]) || ctype_space($_POST["status"]))
             array_push($response["missing_fields"], "status");
         echo json_encode($response);
         die();
@@ -114,7 +114,7 @@ function update_task () {
         header("Content-Type: application/json");
         $response = [
             "status" => 400,
-            "detail" => "Missing id. Format: DELETE /tasks/{id}"
+            "detail" => "Missing id. Format: PUT /tasks/{id}"
         ];
         echo json_encode($response);
         die();
@@ -127,6 +127,27 @@ function update_task () {
             "status" => 400,
             "detail" => "Invalid id - must be int"
         ];
+        echo json_encode($response);
+        die();
+    }
+
+    $raw = file_get_contents('php://input');
+    parse_str($raw, $data);
+
+    if (validate_fields($raw)) {
+        http_response_code(400);
+        header("Content-Type: application/json");
+        $response = [
+            "status" => 400,
+            "detail" => "Invalid request body",
+            "missing_fields" => []
+        ];
+        if (!isset($field["title"]) && !empty($field["title"]) && !ctype_space($field["title"]))
+            array_push($response["missing_fields"], "title");
+        if (!isset($field["description"]) && !empty($field["description"]) && !ctype_space($field["description"]))
+            array_push($response["missing_fields"], "description");
+        if (isset($field["status"]) && !empty($field["status"]) && !ctype_space($field["status"]))
+            array_push($response["missing_fields"], "status");
         echo json_encode($response);
         die();
     }
@@ -145,8 +166,6 @@ function update_task () {
         echo json_encode($response);
         die();
     }
-    $raw = file_get_contents('php://input');
-    parse_str($raw, $data);
     
     $statement = DB\DBConnection::$pdo->prepare("UPDATE tasks SET title = :title, description = :description, status = :status WHERE id = :id");
     $statement->bindParam(":id", $_GET["id"]);
@@ -211,6 +230,8 @@ function delete_task () {
     echo json_encode($response);
 }
 
-function validate_field($field) {
-    return isset($field) && !empty($field) && !ctype_space($field);
+function validate_fields($field) {
+    return isset($field["title"]) && !empty($field["title"]) && !ctype_space($field["title"])
+        && isset($field["description"]) && !empty($field["description"]) && !ctype_space($field["description"])
+        && isset($field["status"]) && !empty($field["status"]) && !ctype_space($field["status"]);
 }
